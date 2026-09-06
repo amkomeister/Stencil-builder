@@ -1,0 +1,12 @@
+node_modules/
+.test-build/
+.test-fixtures/
+*.log
+.DS_Store
+Thumbs.db
+
+# Keep private source images and personal exports out of version control.
+private/
+uploads/
+outputs/
+*.local.*

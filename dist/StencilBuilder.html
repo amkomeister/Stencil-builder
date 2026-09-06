@@ -1,0 +1,1788 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#191917">
+  <title>Stencil Builder · local stencil generator</title>
+  <style>:root {
+  --ink: #191917;
+  --ink-soft: #3b3b36;
+  --paper: #f1eee5;
+  --paper-deep: #e3ded2;
+  --white: #fffefa;
+  --acid: #d8ff48;
+  --acid-dark: #a7ca22;
+  --rust: #dc5b3f;
+  --line: rgba(25, 25, 23, .16);
+  --muted: #77766f;
+  --radius: 18px;
+  --shadow: 0 18px 55px rgba(25, 25, 23, .12);
+  font-family: "Segoe UI", Arial, sans-serif;
+  color: var(--ink);
+  background: var(--paper);
+  font-synthesis: none;
+}
+
+* { box-sizing: border-box; }
+html { min-width: 0; scroll-behavior: smooth; }
+body {
+  margin: 0;
+  min-width: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 15% 5%, rgba(255,255,255,.8), transparent 28rem),
+    repeating-linear-gradient(98deg, transparent 0 11px, rgba(25,25,23,.014) 11px 12px),
+    var(--paper);
+}
+button, input, select { font: inherit; }
+button, label[for], select, input[type="range"], input[type="color"] { cursor: pointer; }
+button { color: inherit; }
+button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible {
+  outline: 3px solid var(--rust);
+  outline-offset: 3px;
+}
+[hidden] { display: none !important; }
+
+.skip-link {
+  position: fixed;
+  left: 1rem;
+  top: -5rem;
+  z-index: 100;
+  padding: .7rem 1rem;
+  color: var(--white);
+  background: var(--ink);
+  border-radius: 8px;
+}
+.skip-link:focus { top: 1rem; }
+
+.masthead {
+  min-height: 104px;
+  padding: 20px clamp(20px, 3vw, 52px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  color: var(--white);
+  background:
+    radial-gradient(circle at 90% -60%, rgba(216,255,72,.25), transparent 45%),
+    var(--ink);
+  border-bottom: 5px solid var(--acid);
+}
+.brand-lockup { display: flex; align-items: center; gap: 16px; }
+.brand-mark {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  font: 900 20px/1 "Arial Black", sans-serif;
+  letter-spacing: -2px;
+  color: var(--ink);
+  background: var(--acid);
+  clip-path: polygon(8% 4%, 95% 0, 100% 88%, 4% 100%, 0 16%);
+  transform: rotate(-2deg);
+}
+.eyebrow {
+  margin: 0 0 4px;
+  font-size: 11px;
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+.brand-lockup h1 {
+  margin: 0;
+  font: 900 clamp(23px, 3vw, 35px)/.92 "Arial Black", "Segoe UI Black", sans-serif;
+  letter-spacing: -.07em;
+}
+.brand-lockup h1 span { color: var(--acid); }
+.privacy-pill {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 14px;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #dfddd6;
+  background: rgba(255,255,255,.05);
+}
+.privacy-pill span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--acid);
+  box-shadow: 0 0 0 4px rgba(216,255,72,.13);
+}
+
+.app-shell {
+  width: min(1720px, 100%);
+  min-height: calc(100vh - 104px);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(315px, 390px) minmax(0, 1fr);
+}
+.control-rail {
+  padding: 24px clamp(18px, 2.5vw, 34px) 48px;
+  border-right: 1px solid var(--line);
+  background: rgba(255,255,255,.3);
+}
+.step-card { padding: 23px 0; border-bottom: 1px solid var(--line); }
+.step-card:first-child { padding-top: 4px; }
+.step-heading { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.step-heading > span {
+  min-width: 33px;
+  height: 25px;
+  display: grid;
+  place-items: center;
+  font: 900 11px/1 "Arial Black", sans-serif;
+  background: var(--ink);
+  color: var(--acid);
+  clip-path: polygon(0 8%, 94% 0, 100% 88%, 7% 100%);
+}
+.step-heading h2, .result-panel h2 {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.1;
+  letter-spacing: -.03em;
+}
+
+.dropzone {
+  min-height: 136px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  text-align: center;
+  color: var(--ink);
+  border: 2px dashed rgba(25,25,23,.34);
+  border-radius: 14px;
+  background: rgba(255,255,255,.38);
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+.dropzone:hover, .dropzone.is-dragging { border-color: var(--ink); background: var(--white); transform: translateY(-1px); }
+.drop-icon {
+  width: 37px;
+  height: 37px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--ink);
+  background: var(--acid);
+  font-size: 21px;
+  font-weight: 900;
+}
+.dropzone strong { font-size: 14px; }
+.dropzone small, .file-summary span, .sample-row small, .export-card small { color: var(--muted); font-size: 11px; }
+.file-summary { min-height: 74px; display: grid; grid-template-columns: 56px minmax(0,1fr) auto; align-items: center; gap: 12px; }
+.file-thumb { width: 56px; height: 56px; overflow: hidden; border-radius: 10px; background: var(--ink); }
+.file-thumb canvas { width: 100%; height: 100%; display: block; }
+.file-summary strong, .file-summary span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-summary strong { margin-bottom: 3px; font-size: 13px; }
+.icon-button, .quiet-button, .text-button { border: 0; background: transparent; }
+.icon-button { width: 38px; height: 38px; border-radius: 50%; font-size: 20px; }
+.icon-button:hover { background: rgba(25,25,23,.08); }
+.inline-error { margin: 10px 0 0; padding: 10px; color: #751c12; background: #ffe2d9; border-radius: 8px; font-size: 12px; }
+
+.segmented { display: grid; grid-template-columns: 1fr 1fr; padding: 3px; border: 1px solid var(--line); border-radius: 10px; background: rgba(25,25,23,.045); }
+.tool-button { min-height: 38px; border: 0; border-radius: 7px; background: transparent; font-size: 12px; font-weight: 750; }
+.tool-button.is-active { color: var(--white); background: var(--ink); box-shadow: 0 2px 8px rgba(25,25,23,.18); }
+.range-row { display: block; margin-top: 15px; }
+.range-row > span { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 8px; font-size: 12px; font-weight: 750; }
+.range-row output { color: var(--muted); font-size: 11px; font-weight: 600; }
+input[type="range"] { width: 100%; accent-color: var(--ink); }
+.button-row { display: flex; gap: 8px; margin-top: 12px; }
+.quiet-button { flex: 1; min-height: 38px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 9px; font-size: 12px; font-weight: 700; background: rgba(255,255,255,.38); }
+.quiet-button:hover { background: var(--white); border-color: rgba(25,25,23,.35); }
+.sample-row { margin-top: 14px; padding: 10px; display: grid; grid-template-columns: 31px minmax(0,1fr) auto; align-items: center; gap: 9px; border-radius: 10px; background: rgba(25,25,23,.045); }
+.sample-row strong, .sample-row small { display: block; }
+.sample-row strong { font-size: 11px; }
+.sample-swatch { width: 31px; height: 31px; border: 2px solid var(--white); border-radius: 50%; box-shadow: 0 0 0 1px var(--line); }
+.sample-swatch.is-empty { background: repeating-linear-gradient(45deg,#ddd 0 5px,#fff 5px 10px); }
+.text-button { padding: 6px; color: var(--rust); font-size: 11px; font-weight: 800; }
+.text-button:disabled { color: var(--muted); cursor: not-allowed; opacity: .55; }
+
+.layer-count { margin: 0; padding: 0; border: 0; }
+.profile-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+.profile-card { min-height: 74px; padding: 11px; display: grid; gap: 4px; text-align: left; border: 1px solid var(--line); border-radius: 11px; background: rgba(255,255,255,.38); }
+.profile-card strong { font-size: 12px; }
+.profile-card span { color: var(--muted); font-size: 10px; line-height: 1.35; }
+.profile-card.is-active { border-color: var(--ink); background: var(--acid); box-shadow: inset 0 0 0 1px var(--ink); }
+.profile-card.is-active span { color: var(--ink-soft); }
+.profile-note { margin: 0 0 15px; padding: 10px 11px; border-left: 3px solid var(--rust); color: var(--ink-soft); background: rgba(220,91,63,.08); font-size: 10px; line-height: 1.45; }
+.layer-count legend { margin-bottom: 9px; font-size: 12px; font-weight: 750; }
+.layer-count { display: grid; grid-template-columns: repeat(3, 1fr); align-items: center; gap: 7px; }
+.layer-count legend { grid-column: 1 / -1; }
+.layer-count label { position: relative; }
+.layer-count input { position: absolute; opacity: 0; pointer-events: none; }
+.layer-count label span { min-height: 42px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 9px; font-weight: 900; background: rgba(255,255,255,.38); }
+.layer-count input:checked + span { color: var(--ink); border-color: var(--ink); background: var(--acid); box-shadow: inset 0 0 0 1px var(--ink); }
+.layer-count input:focus-visible + span { outline: 3px solid var(--rust); outline-offset: 3px; }
+.two-ranges { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.palette { display: grid; gap: 8px; margin-top: 16px; }
+.palette-row { min-height: 43px; display: grid; grid-template-columns: 29px minmax(0,1fr) auto; align-items: center; gap: 10px; padding: 6px 9px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.35); }
+.palette-row input[type="color"] { width: 29px; height: 29px; padding: 0; border: 0; border-radius: 50%; overflow: hidden; background: transparent; }
+.palette-row strong { font-size: 11px; }
+.palette-row span { color: var(--muted); font-size: 10px; font-family: Consolas, monospace; }
+.palette-order { width: 18px; height: 18px; display: grid; place-items: center; border-radius: 4px; color: var(--white); background: var(--ink); font-size: 9px; font-weight: 900; }
+
+.field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+.field-grid label { display: grid; gap: 6px; font-size: 11px; font-weight: 750; }
+.field-grid select, .field-grid input { min-width: 0; width: 100%; min-height: 40px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px; color: var(--ink); background: rgba(255,255,255,.6); }
+.field-grid input:disabled { color: var(--muted); background: rgba(25,25,23,.04); cursor: not-allowed; }
+
+.stage-column { min-width: 0; padding: 24px clamp(18px, 3vw, 46px) 58px; }
+.stage-toolbar { min-height: 46px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.preview-tabs { display: flex; flex-wrap: wrap; gap: 5px; }
+.preview-tabs button { min-height: 36px; padding: 7px 13px; border: 1px solid transparent; border-radius: 999px; color: var(--muted); background: transparent; font-size: 11px; font-weight: 800; }
+.preview-tabs button:hover { border-color: var(--line); }
+.preview-tabs button.is-active { color: var(--white); background: var(--ink); }
+.quality-badge { display: flex; align-items: center; gap: 7px; padding: 7px 11px; border-radius: 999px; font-size: 11px; background: var(--paper-deep); }
+.quality-badge span { color: var(--muted); font-size: 17px; line-height: 0; }
+.quality-badge.is-ready { color: #33420b; background: rgba(216,255,72,.6); }
+.quality-badge.is-ready span { color: #678400; }
+.quality-badge.is-warning { color: #6f2e20; background: #ffd8ce; }
+.quality-badge.is-warning span { color: var(--rust); }
+
+.stage {
+  position: relative;
+  min-height: min(720px, calc(100vh - 215px));
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(25,25,23,.7);
+  border-radius: 20px;
+  background:
+    linear-gradient(45deg, rgba(255,255,255,.05) 25%, transparent 25% 75%, rgba(255,255,255,.05) 75%),
+    linear-gradient(45deg, rgba(255,255,255,.05) 25%, transparent 25% 75%, rgba(255,255,255,.05) 75%),
+    #262622;
+  background-position: 0 0, 18px 18px;
+  background-size: 36px 36px;
+  box-shadow: var(--shadow);
+  touch-action: none;
+}
+.stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 42%, transparent 20%, rgba(0,0,0,.2) 100%);
+}
+.stage canvas { position: relative; z-index: 1; display: none; max-width: calc(100% - 56px); max-height: calc(100% - 56px); background: #f5f2e9; box-shadow: 0 16px 45px rgba(0,0,0,.36); cursor: grab; }
+.stage canvas:active { cursor: grabbing; }
+.stage.has-image canvas { display: block; }
+.empty-state { position: relative; z-index: 2; width: min(520px, calc(100% - 38px)); text-align: center; color: var(--white); }
+.empty-state h2 { margin: 10px 0 14px; font: 900 clamp(32px, 5vw, 63px)/.95 "Arial Black", "Segoe UI Black", sans-serif; letter-spacing: -.07em; text-transform: uppercase; }
+.empty-state > p:not(.eyebrow) { max-width: 430px; margin: 0 auto 25px; color: #bab9b2; font-size: 14px; line-height: 1.55; }
+.empty-state .eyebrow { color: var(--acid); }
+.empty-art { height: 82px; display: flex; justify-content: center; align-items: end; gap: 7px; }
+.empty-art span { width: 48px; background: var(--acid); clip-path: polygon(7% 0,100% 4%,94% 96%,0 100%); }
+.empty-art span:nth-child(1) { height: 55px; transform: rotate(-8deg); background: #f5f2e9; }
+.empty-art span:nth-child(2) { height: 78px; transform: rotate(3deg); }
+.empty-art span:nth-child(3) { height: 43px; transform: rotate(10deg); background: var(--rust); }
+.primary-button { min-height: 48px; padding: 12px 18px 12px 22px; display: inline-flex; align-items: center; gap: 20px; border-radius: 9px; color: var(--ink); background: var(--acid); font-size: 13px; font-weight: 900; box-shadow: 0 8px 30px rgba(216,255,72,.12); }
+.primary-button span { font-size: 21px; }
+.processing { position: absolute; z-index: 4; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 9px; padding: 10px 14px; border-radius: 999px; color: var(--white); background: rgba(25,25,23,.9); font-size: 12px; font-weight: 750; }
+.processing span { width: 12px; height: 12px; border: 2px solid rgba(255,255,255,.25); border-top-color: var(--acid); border-radius: 50%; animation: spin .7s linear infinite; }
+.canvas-hint { position: absolute; z-index: 3; left: 50%; bottom: 18px; transform: translateX(-50%); max-width: calc(100% - 36px); padding: 8px 12px; border-radius: 7px; color: var(--ink); background: var(--acid); font-size: 11px; font-weight: 800; text-align: center; box-shadow: 0 7px 25px rgba(0,0,0,.25); }
+
+.result-panel { margin-top: 22px; }
+.result-summary { padding: 22px; display: flex; align-items: center; justify-content: space-between; gap: 24px; border: 1px solid var(--line); border-radius: var(--radius); background: rgba(255,255,255,.5); }
+.result-summary h2 { font-size: 22px; }
+.result-summary dl { margin: 0; display: grid; grid-template-columns: repeat(3, minmax(70px,1fr)); gap: 8px; }
+.result-summary dl div { min-width: 78px; padding: 10px 12px; border-left: 2px solid var(--ink); }
+.result-summary dt { color: var(--muted); font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.result-summary dd { margin: 2px 0 0; font: 900 20px/1 "Arial Black", sans-serif; }
+.warning-list { margin-top: 12px; padding: 13px 15px; border-left: 4px solid var(--rust); color: #672c20; background: #ffe0d7; border-radius: 7px; font-size: 12px; line-height: 1.5; }
+.export-card { margin-top: 18px; padding: clamp(18px, 3vw, 28px); color: var(--white); background: var(--ink); border-radius: var(--radius); box-shadow: var(--shadow); }
+.export-heading { display: flex; justify-content: space-between; align-items: end; gap: 20px; margin-bottom: 18px; }
+.export-heading .eyebrow { color: var(--acid); }
+.export-heading h2 { font-size: 23px; }
+.export-heading > p { max-width: 260px; margin: 0; color: #aaa9a2; font-size: 11px; text-align: right; }
+.export-composite, .layer-export { min-height: 70px; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 13px 0; border-top: 1px solid rgba(255,255,255,.13); }
+.export-composite strong, .export-composite small, .layer-export strong, .layer-export small { display: block; }
+.export-composite strong, .layer-export strong { font-size: 13px; }
+.file-kind { display: inline-block; margin-bottom: 5px; color: var(--acid); font-size: 9px; font-weight: 900; letter-spacing: .14em; }
+.layer-export-meta { display: grid; grid-template-columns: 28px minmax(0,1fr); align-items: center; gap: 11px; }
+.layer-color { width: 28px; height: 28px; border: 1px solid rgba(255,255,255,.35); border-radius: 7px; }
+.export-actions { display: flex; gap: 7px; }
+.export-actions button { min-width: 58px; min-height: 37px; padding: 7px 12px; border: 1px solid rgba(255,255,255,.22); border-radius: 8px; color: var(--white); background: rgba(255,255,255,.07); font-size: 11px; font-weight: 850; }
+.export-actions button:hover { color: var(--ink); border-color: var(--acid); background: var(--acid); }
+
+footer { min-height: 76px; padding: 20px clamp(20px, 3vw, 52px); display: flex; justify-content: space-between; align-items: center; gap: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; letter-spacing: .04em; }
+footer strong { color: var(--ink); font-family: "Arial Black", sans-serif; }
+.toast { position: fixed; z-index: 50; right: 20px; bottom: 20px; max-width: min(380px, calc(100vw - 40px)); padding: 12px 15px; color: var(--white); background: var(--ink); border-left: 5px solid var(--acid); border-radius: 8px; box-shadow: 0 15px 45px rgba(0,0,0,.25); font-size: 12px; font-weight: 700; transform: translateY(120%); opacity: 0; transition: transform 220ms ease, opacity 220ms ease; }
+.toast.is-visible { transform: translateY(0); opacity: 1; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 980px) {
+  .app-shell { display: block; }
+  .control-rail { border-right: 0; border-bottom: 1px solid var(--line); }
+  .control-rail { display: grid; grid-template-columns: 1fr 1fr; gap: 0 28px; }
+  .step-card:first-child { padding-top: 23px; }
+  .step-card:nth-child(odd) { border-right: 1px solid var(--line); padding-right: 28px; }
+  .stage { min-height: 630px; }
+}
+
+@media (max-width: 680px) {
+  .masthead { min-height: 86px; padding: 14px 18px; }
+  .brand-mark { width: 47px; height: 47px; }
+  .brand-lockup .eyebrow { display: none; }
+  .brand-lockup h1 { font-size: 22px; }
+  .privacy-pill { width: 10px; height: 10px; padding: 0; border: 0; background: transparent; overflow: hidden; }
+  .privacy-pill span { flex: 0 0 8px; }
+  .control-rail { display: block; padding: 12px 18px 28px; }
+  .step-card:nth-child(odd) { border-right: 0; padding-right: 0; }
+  .stage-column { padding: 16px 12px 40px; }
+  .stage-toolbar { align-items: flex-start; }
+  .preview-tabs { gap: 2px; }
+  .preview-tabs button { min-height: 34px; padding: 6px 10px; }
+  .quality-badge { padding: 7px 9px; }
+  .stage { min-height: 500px; border-radius: 14px; }
+  .stage canvas { max-width: calc(100% - 22px); max-height: calc(100% - 22px); }
+  .empty-state h2 { font-size: 36px; }
+  .result-summary, .export-heading { align-items: flex-start; flex-direction: column; }
+  .result-summary dl { width: 100%; }
+  .export-heading > p { text-align: left; }
+  .export-composite, .layer-export { align-items: flex-start; flex-direction: column; }
+  .export-actions { width: 100%; }
+  .export-actions button { flex: 1; }
+  footer { align-items: flex-start; flex-direction: column; }
+}
+
+@media (max-width: 390px) {
+  .two-ranges, .field-grid { grid-template-columns: 1fr; }
+  .result-summary dl { grid-template-columns: 1fr; }
+  .result-summary dl div { border-left: 0; border-top: 2px solid var(--ink); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+}
+
+@media print {
+  .masthead, .control-rail, .stage-toolbar, .result-panel, footer { display: none !important; }
+  .app-shell, .stage-column, .stage { display: block; padding: 0; margin: 0; border: 0; box-shadow: none; background: white; }
+  .stage canvas { max-width: 100%; max-height: none; box-shadow: none; }
+}
+</style>
+</head>
+<body>
+  <a class="skip-link" href="#workspace">Skip to the workspace</a>
+  <header class="masthead">
+    <div class="brand-lockup" aria-label="Stencil Builder">
+      <span class="brand-mark" aria-hidden="true">SB</span>
+      <div>
+        <p class="eyebrow">100% local image processing</p>
+        <h1>STENCIL<span>BUILDER</span></h1>
+      </div>
+    </div>
+    <div class="privacy-pill"><span aria-hidden="true"></span> Your image never leaves your device</div>
+  </header>
+
+  <main id="workspace" class="app-shell">
+    <aside class="control-rail" aria-label="Settings">
+      <section class="step-card upload-card" aria-labelledby="upload-title">
+        <div class="step-heading"><span>01</span><h2 id="upload-title">Choose a subject</h2></div>
+        <label id="dropzone" class="dropzone" for="file-input" tabindex="0">
+          <input id="file-input" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+          <span class="drop-icon" aria-hidden="true">↥</span>
+          <strong>Load an image</strong>
+          <small>JPG, PNG or WebP · drag and drop or click</small>
+        </label>
+        <div id="file-summary" class="file-summary" hidden>
+          <div class="file-thumb"><canvas id="thumb-canvas" aria-hidden="true"></canvas></div>
+          <div><strong id="file-name"></strong><span id="file-meta"></span></div>
+          <button id="replace-image" class="icon-button" type="button" aria-label="Replace image">↻</button>
+        </div>
+        <p id="file-error" class="inline-error" role="alert" hidden></p>
+      </section>
+
+      <section class="step-card" aria-labelledby="composition-title">
+        <div class="step-heading"><span>02</span><h2 id="composition-title">Composition</h2></div>
+        <div class="segmented" role="group" aria-label="Composition tools">
+          <button class="tool-button is-active" data-tool="move" type="button">Move crop</button>
+          <button class="tool-button" data-tool="background" type="button">Pick background</button>
+        </div>
+        <label class="range-row" for="zoom">
+          <span>Zoom <output id="zoom-value">100 %</output></span>
+          <input id="zoom" type="range" min="100" max="300" value="100" step="1">
+        </label>
+        <div class="button-row">
+          <button id="rotate-left" class="quiet-button" type="button">↶ Rotate</button>
+          <button id="reset-crop" class="quiet-button" type="button">Reset</button>
+        </div>
+        <div class="sample-row">
+          <span id="sample-swatch" class="sample-swatch is-empty" aria-hidden="true"></span>
+          <div><strong>Background samples</strong><small id="sample-help">Choose the tool and click one or more background areas.</small></div>
+          <button id="clear-sample" class="text-button" type="button" disabled>Clear all</button>
+        </div>
+        <label class="range-row" for="background-tolerance">
+          <span>Tolerance <output id="tolerance-value">28</output></span>
+          <input id="background-tolerance" type="range" min="0" max="100" value="28" step="1">
+        </label>
+      </section>
+
+      <section class="step-card" aria-labelledby="layers-title">
+        <div class="step-heading"><span>03</span><h2 id="layers-title">Portrait engine</h2></div>
+        <div class="profile-switch" role="group" aria-label="Processing profile">
+          <button type="button" class="profile-card is-active" data-profile="portrait" aria-pressed="true"><strong>Portrait Pro</strong><span>Overlapping layers with facial details</span></button>
+          <button type="button" class="profile-card" data-profile="classic" aria-pressed="false"><strong>Classic</strong><span>Separate graphic tone regions</span></button>
+        </div>
+        <p class="profile-note"><strong>Painting order:</strong> light base silhouette → tone → shadow → black key detail.</p>
+        <fieldset class="layer-count">
+          <legend>Number of paint layers</legend>
+          <label><input type="radio" name="layer-count" value="3"><span>3</span></label>
+          <label><input type="radio" name="layer-count" value="4"><span>4</span></label>
+          <label><input type="radio" name="layer-count" value="5" checked><span>5</span></label>
+        </fieldset>
+        <label class="range-row" for="contrast"><span>Contrast <output id="contrast-value">122%</output></span><input id="contrast" type="range" min="70" max="180" value="122" step="1"></label>
+        <label class="range-row" for="detail"><span>Detail <output id="detail-value">68%</output></span><input id="detail" type="range" min="0" max="100" value="68" step="1"></label>
+        <div class="two-ranges">
+          <label class="range-row" for="edge-strength"><span>Facial edges <output id="edge-strength-value">72%</output></span><input id="edge-strength" type="range" min="0" max="100" value="72" step="1"></label>
+          <label class="range-row" for="shadow-bias"><span>Shadow depth <output id="shadow-bias-value">58%</output></span><input id="shadow-bias" type="range" min="0" max="100" value="58" step="1"></label>
+        </div>
+        <div class="two-ranges">
+          <label class="range-row" for="min-detail"><span>Minimum detail <output id="min-detail-value">1.5 mm</output></span><input id="min-detail" type="range" min="0.5" max="8" value="1.5" step="0.5"></label>
+          <label class="range-row" for="bridge-width"><span>Bridge width <output id="bridge-width-value">2.5 mm</output></span><input id="bridge-width" type="range" min="1.5" max="10" value="2.5" step="0.5"></label>
+        </div>
+        <div id="palette" class="palette" aria-label="Layer colors"></div>
+      </section>
+
+      <section class="step-card" aria-labelledby="paper-title">
+        <div class="step-heading"><span>04</span><h2 id="paper-title">Page and size</h2></div>
+        <div class="field-grid">
+          <label>Format<select id="paper-preset"><option value="A4">A4</option><option value="A3">A3</option><option value="custom">Custom size</option></select></label>
+          <label>Orientation<select id="orientation"><option value="portrait">Portrait</option><option value="landscape">Landscape</option></select></label>
+          <label>Width (mm)<input id="page-width" type="number" value="210" min="80" max="2000" step="1" disabled></label>
+          <label>Height (mm)<input id="page-height" type="number" value="297" min="80" max="2000" step="1" disabled></label>
+        </div>
+      </section>
+    </aside>
+
+    <section class="stage-column" aria-label="Preview and export">
+      <div class="stage-toolbar">
+        <div id="preview-tabs" class="preview-tabs" role="tablist" aria-label="Preview">
+          <button role="tab" aria-selected="false" data-preview="original">Original</button>
+          <button role="tab" aria-selected="true" data-preview="composite" class="is-active">Composite</button>
+        </div>
+        <div id="quality-badge" class="quality-badge is-idle"><span aria-hidden="true">○</span><strong>Waiting</strong></div>
+      </div>
+
+      <div id="stage" class="stage is-empty">
+        <canvas id="preview-canvas" tabindex="0" aria-label="Stencil preview"></canvas>
+        <div id="empty-state" class="empty-state">
+          <div class="empty-art" aria-hidden="true"><span></span><span></span><span></span></div>
+          <p class="eyebrow">From photo to physical stencil</p>
+          <h2>Load a subject<br>and cut it free.</h2>
+          <p>Portrait Pro builds five overlapping paint passes while prioritizing faces, glasses and texture.</p>
+          <label class="primary-button" for="file-input">Choose your first image <span aria-hidden="true">→</span></label>
+        </div>
+        <div id="processing" class="processing" hidden role="status"><span></span>Building stencil layers…</div>
+        <div id="canvas-hint" class="canvas-hint" hidden></div>
+      </div>
+
+      <div id="result-panel" class="result-panel" hidden>
+        <section class="result-summary" aria-labelledby="summary-title">
+          <div><p class="eyebrow">Cut check</p><h2 id="summary-title">Your result is ready</h2></div>
+          <dl>
+            <div><dt>Layers</dt><dd id="stat-layers">3</dd></div>
+            <div><dt>Bridges added</dt><dd id="stat-bridges">0</dd></div>
+            <div><dt>Fragments removed</dt><dd id="stat-fragments">0</dd></div>
+          </dl>
+        </section>
+        <div id="warning-list" class="warning-list" hidden></div>
+        <section class="export-card" aria-labelledby="export-title">
+          <div class="export-heading"><div><p class="eyebrow">Files</p><h2 id="export-title">Export result</h2></div><p>Nothing is saved until you choose a file.</p></div>
+          <div class="export-composite">
+            <div><span class="file-kind">COMPOSITE</span><strong>Color preview</strong><small>The complete design with your selected layer colors</small></div>
+            <div class="export-actions"><button id="export-composite-png" type="button">PNG</button><button id="export-combined-svg" type="button">SVG</button></div>
+          </div>
+          <div id="layer-exports" class="layer-exports"></div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <footer><strong>STENCIL BUILDER PRO 2.0</strong><span>Local · offline · no automatic storage</span></footer>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script>"use strict";
+(() => {
+  // src/engine.ts
+  function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+  }
+  function hexToRgb(hex) {
+    const normalized = hex.replace("#", "");
+    const value = Number.parseInt(normalized.length === 3 ? normalized.split("").map((part) => part + part).join("") : normalized, 16);
+    return [value >> 16 & 255, value >> 8 & 255, value & 255];
+  }
+  function boxBlur(input, width, height, radius) {
+    if (radius <= 0) return input.slice();
+    const horizontal = new Float32Array(input.length);
+    const output = new Float32Array(input.length);
+    for (let y = 0; y < height; y += 1) {
+      let sum = 0;
+      const row = y * width;
+      for (let x = -radius; x <= radius; x += 1) {
+        sum += input[row + clamp(x, 0, width - 1)] ?? 0;
+      }
+      for (let x = 0; x < width; x += 1) {
+        horizontal[row + x] = sum / (radius * 2 + 1);
+        sum -= input[row + clamp(x - radius, 0, width - 1)] ?? 0;
+        sum += input[row + clamp(x + radius + 1, 0, width - 1)] ?? 0;
+      }
+    }
+    for (let x = 0; x < width; x += 1) {
+      let sum = 0;
+      for (let y = -radius; y <= radius; y += 1) {
+        sum += horizontal[clamp(y, 0, height - 1) * width + x] ?? 0;
+      }
+      for (let y = 0; y < height; y += 1) {
+        output[y * width + x] = sum / (radius * 2 + 1);
+        sum -= horizontal[clamp(y - radius, 0, height - 1) * width + x] ?? 0;
+        sum += horizontal[clamp(y + radius + 1, 0, height - 1) * width + x] ?? 0;
+      }
+    }
+    return output;
+  }
+  function calculateToneThresholds(values, count) {
+    if (values.length === 0) return Array.from({ length: count - 1 }, (_, index) => (index + 1) * 255 / count);
+    const histogram = new Uint32Array(256);
+    for (let index = 0; index < values.length; index += 1) {
+      const bucket = clamp(Math.round(values[index] ?? 0), 0, 255);
+      histogram[bucket] = (histogram[bucket] ?? 0) + 1;
+    }
+    let minimum = 0;
+    let maximum = 255;
+    while (minimum < 255 && histogram[minimum] === 0) minimum += 1;
+    while (maximum > 0 && histogram[maximum] === 0) maximum -= 1;
+    const centers = Array.from({ length: count }, (_, index) => minimum + (maximum - minimum) * (index + 0.5) / count);
+    const totals = new Float64Array(count);
+    const weighted = new Float64Array(count);
+    for (let iteration = 0; iteration < 18; iteration += 1) {
+      totals.fill(0);
+      weighted.fill(0);
+      for (let value = minimum; value <= maximum; value += 1) {
+        const frequency = histogram[value] ?? 0;
+        if (!frequency) continue;
+        let best = 0;
+        let distance = Math.abs(value - (centers[0] ?? 0));
+        for (let cluster = 1; cluster < count; cluster += 1) {
+          const nextDistance = Math.abs(value - (centers[cluster] ?? 0));
+          if (nextDistance < distance) {
+            best = cluster;
+            distance = nextDistance;
+          }
+        }
+        totals[best] = (totals[best] ?? 0) + frequency;
+        weighted[best] = (weighted[best] ?? 0) + frequency * value;
+      }
+      for (let cluster = 0; cluster < count; cluster += 1) {
+        const total = totals[cluster] ?? 0;
+        if (total > 0) centers[cluster] = (weighted[cluster] ?? 0) / total;
+      }
+      centers.sort((a, b) => a - b);
+    }
+    return centers.slice(0, -1).map((center, index) => (center + (centers[index + 1] ?? center)) / 2);
+  }
+  function calculatePortraitThresholds(values, count, shadowBias) {
+    if (values.length === 0) return Array.from({ length: count - 1 }, (_, index) => (index + 1) * 255 / count);
+    const histogram = new Uint32Array(256);
+    for (let index = 0; index < values.length; index += 1) {
+      histogram[clamp(Math.round(values[index] ?? 0), 0, 255)] += 1;
+    }
+    const bias = (clamp(shadowBias, 0, 100) - 50) / 250;
+    const thresholds = [];
+    for (let index = 1; index < count; index += 1) {
+      const base = index / count;
+      const quantile = clamp(base + bias * Math.sin(Math.PI * base), 0.06, 0.94);
+      const target = values.length * quantile;
+      let running = 0;
+      let value = 0;
+      for (; value < 255; value += 1) {
+        running += histogram[value] ?? 0;
+        if (running >= target) break;
+      }
+      thresholds.push(value);
+    }
+    return thresholds;
+  }
+  function floodBackground(data, width, height, sample, seed, tolerance, backgroundMask) {
+    const queue = new Int32Array(width * height);
+    let head = 0;
+    let tail = 0;
+    const visited = new Uint8Array(width * height);
+    const colorLimit = tolerance * 3.15;
+    const matches = (index) => {
+      const offset = index * 4;
+      const red = data[offset] ?? 0;
+      const green = data[offset + 1] ?? 0;
+      const blue = data[offset + 2] ?? 0;
+      const dr = red - sample[0];
+      const dg = green - sample[1];
+      const db = blue - sample[2];
+      return Math.sqrt(dr * dr * 0.85 + dg * dg * 1.2 + db * db * 0.95) <= colorLimit;
+    };
+    const enqueue = (index, force = false) => {
+      if (index < 0 || index >= visited.length || visited[index]) return;
+      visited[index] = 1;
+      if (!force && !matches(index)) return;
+      backgroundMask[index] = 1;
+      queue[tail++] = index;
+    };
+    if (seed) {
+      const sx = clamp(Math.round(seed[0] * (width - 1)), 0, width - 1);
+      const sy = clamp(Math.round(seed[1] * (height - 1)), 0, height - 1);
+      enqueue(sy * width + sx, true);
+    }
+    for (let x = 0; x < width; x += 1) {
+      enqueue(x);
+      enqueue((height - 1) * width + x);
+    }
+    for (let y = 1; y < height - 1; y += 1) {
+      enqueue(y * width);
+      enqueue(y * width + width - 1);
+    }
+    while (head < tail) {
+      const current = queue[head++] ?? 0;
+      const x = current % width;
+      const y = Math.floor(current / width);
+      if (x > 0) enqueue(current - 1);
+      if (x + 1 < width) enqueue(current + 1);
+      if (y > 0) enqueue(current - width);
+      if (y + 1 < height) enqueue(current + width);
+    }
+  }
+  function removeSmallComponents(mask, width, height, minimumArea) {
+    const visited = new Uint8Array(mask.length);
+    const queue = new Int32Array(mask.length);
+    let removed = 0;
+    for (let start = 0; start < mask.length; start += 1) {
+      if (!mask[start] || visited[start]) continue;
+      let head = 0;
+      let tail = 0;
+      queue[tail++] = start;
+      visited[start] = 1;
+      while (head < tail) {
+        const current = queue[head++] ?? 0;
+        const x = current % width;
+        const y = Math.floor(current / width);
+        if (x > 0) {
+          const next = current - 1;
+          if (mask[next] && !visited[next]) {
+            visited[next] = 1;
+            queue[tail++] = next;
+          }
+        }
+        if (x + 1 < width) {
+          const next = current + 1;
+          if (mask[next] && !visited[next]) {
+            visited[next] = 1;
+            queue[tail++] = next;
+          }
+        }
+        if (y > 0) {
+          const next = current - width;
+          if (mask[next] && !visited[next]) {
+            visited[next] = 1;
+            queue[tail++] = next;
+          }
+        }
+        if (y + 1 < height) {
+          const next = current + width;
+          if (mask[next] && !visited[next]) {
+            visited[next] = 1;
+            queue[tail++] = next;
+          }
+        }
+      }
+      if (tail < minimumArea) {
+        for (let offset = 0; offset < tail; offset += 1) mask[queue[offset] ?? 0] = 0;
+        removed += 1;
+      }
+    }
+    return removed;
+  }
+  function analyzeMaterial(mask, width, height) {
+    const connected = new Uint8Array(mask.length);
+    const queue = new Int32Array(mask.length);
+    let head = 0;
+    let tail = 0;
+    const enqueue = (index) => {
+      if (!mask[index] && !connected[index]) {
+        connected[index] = 1;
+        queue[tail++] = index;
+      }
+    };
+    for (let x = 0; x < width; x += 1) {
+      enqueue(x);
+      enqueue((height - 1) * width + x);
+    }
+    for (let y = 1; y < height - 1; y += 1) {
+      enqueue(y * width);
+      enqueue(y * width + width - 1);
+    }
+    while (head < tail) {
+      const current = queue[head++] ?? 0;
+      const x = current % width;
+      const y = Math.floor(current / width);
+      if (x > 0) enqueue(current - 1);
+      if (x + 1 < width) enqueue(current + 1);
+      if (y > 0) enqueue(current - width);
+      if (y + 1 < height) enqueue(current + width);
+    }
+    const visited = connected.slice();
+    const islands = [];
+    for (let start = 0; start < mask.length; start += 1) {
+      if (mask[start] || visited[start]) continue;
+      const pixels = [];
+      head = 0;
+      tail = 0;
+      queue[tail++] = start;
+      visited[start] = 1;
+      while (head < tail) {
+        const current = queue[head++] ?? 0;
+        pixels.push(current);
+        const x = current % width;
+        const y = Math.floor(current / width);
+        const neighbors = [x > 0 ? current - 1 : -1, x + 1 < width ? current + 1 : -1, y > 0 ? current - width : -1, y + 1 < height ? current + width : -1];
+        for (const next of neighbors) {
+          if (next >= 0 && !mask[next] && !visited[next]) {
+            visited[next] = 1;
+            queue[tail++] = next;
+          }
+        }
+      }
+      islands.push(pixels);
+    }
+    return { connected, islands };
+  }
+  function fillTinyMaterialIslands(mask, width, height, maximumArea) {
+    const analysis = analyzeMaterial(mask, width, height);
+    let filled = 0;
+    for (const island of analysis.islands) {
+      if (island.length >= maximumArea) continue;
+      for (const pixel of island) mask[pixel] = 1;
+      filled += 1;
+    }
+    return filled;
+  }
+  function carveDisc(mask, width, height, center, radius) {
+    const cx = center % width;
+    const cy = Math.floor(center / width);
+    const squaredRadius = radius * radius;
+    for (let y = Math.max(0, cy - radius); y <= Math.min(height - 1, cy + radius); y += 1) {
+      for (let x = Math.max(0, cx - radius); x <= Math.min(width - 1, cx + radius); x += 1) {
+        const dx = x - cx;
+        const dy = y - cy;
+        if (dx * dx + dy * dy <= squaredRadius) mask[y * width + x] = 0;
+      }
+    }
+  }
+  function autoBridgeMaterial(mask, width, height, bridgeWidthPx, maximumBridges = 80) {
+    const analysis = analyzeMaterial(mask, width, height);
+    const targets = analysis.islands.sort((a, b) => b.length - a.length).slice(0, maximumBridges);
+    if (!targets.length) return { bridges: [], floatingIslands: 0 };
+    const distance = new Int32Array(mask.length);
+    distance.fill(-1);
+    const queue = new Int32Array(mask.length);
+    let head = 0;
+    let tail = 0;
+    for (let index = 0; index < analysis.connected.length; index += 1) {
+      if (analysis.connected[index]) {
+        distance[index] = 0;
+        queue[tail++] = index;
+      }
+    }
+    while (head < tail) {
+      const current = queue[head++] ?? 0;
+      const x = current % width;
+      const y = Math.floor(current / width);
+      const nextDistance = (distance[current] ?? 0) + 1;
+      const neighbors = [x > 0 ? current - 1 : -1, x + 1 < width ? current + 1 : -1, y > 0 ? current - width : -1, y + 1 < height ? current + width : -1];
+      for (const next of neighbors) {
+        if (next >= 0 && (distance[next] ?? -1) < 0) {
+          distance[next] = nextDistance;
+          queue[tail++] = next;
+        }
+      }
+    }
+    const bridges = [];
+    const radius = Math.max(1, Math.round(bridgeWidthPx / 2));
+    for (const island of targets) {
+      let current = island[0] ?? 0;
+      for (const pixel of island) {
+        if ((distance[pixel] ?? Number.MAX_SAFE_INTEGER) < (distance[current] ?? Number.MAX_SAFE_INTEGER)) current = pixel;
+      }
+      const start = current;
+      let length = 0;
+      while ((distance[current] ?? 0) > 0 && length < width + height) {
+        carveDisc(mask, width, height, current, radius);
+        const x = current % width;
+        const y = Math.floor(current / width);
+        const neighbors = [x > 0 ? current - 1 : -1, x + 1 < width ? current + 1 : -1, y > 0 ? current - width : -1, y + 1 < height ? current + width : -1];
+        let best = current;
+        for (const next of neighbors) {
+          const nextDistance = next >= 0 ? distance[next] ?? -1 : -1;
+          if (nextDistance >= 0 && nextDistance < (distance[best] ?? Number.MAX_SAFE_INTEGER)) best = next;
+        }
+        if (best === current) break;
+        current = best;
+        length += 1;
+      }
+      carveDisc(mask, width, height, current, radius);
+      bridges.push({ x: start % width, y: Math.floor(start / width), lengthPx: length });
+    }
+    return { bridges, floatingIslands: analyzeMaterial(mask, width, height).islands.length };
+  }
+  function processStencil(source, settings2) {
+    const { width, height, data } = source;
+    const pixels = width * height;
+    const rawLuminance = new Float32Array(pixels);
+    const backgroundMask = new Uint8Array(pixels);
+    const sample = settings2.backgroundSample;
+    for (let pixel = 0; pixel < pixels; pixel += 1) {
+      const offset = pixel * 4;
+      const red = data[offset] ?? 0;
+      const green = data[offset + 1] ?? 0;
+      const blue = data[offset + 2] ?? 0;
+      const alpha = data[offset + 3] ?? 255;
+      rawLuminance[pixel] = 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+      if (alpha < 24) {
+        backgroundMask[pixel] = 1;
+      }
+    }
+    if (settings2.backgroundRegions.length) {
+      for (const region of settings2.backgroundRegions) {
+        floodBackground(data, width, height, region.sample, region.seed, settings2.backgroundTolerance, backgroundMask);
+      }
+    } else if (sample) {
+      floodBackground(data, width, height, sample, settings2.backgroundSeed, settings2.backgroundTolerance, backgroundMask);
+    }
+    const blurRadius = Math.round(1 + (100 - settings2.detail) / 100 * 3);
+    const blurred = boxBlur(rawLuminance, width, height, blurRadius);
+    const localBlur = settings2.profile === "portrait" ? boxBlur(rawLuminance, width, height, Math.max(3, blurRadius * 3)) : blurred;
+    const luminance = new Float32Array(pixels);
+    const sourceMix = 0.3 + settings2.detail / 155;
+    const contrast = settings2.contrast / 100;
+    const edgeMix = settings2.profile === "portrait" ? settings2.edgeStrength / 115 : 0;
+    const foregroundValues = [];
+    for (let pixel = 0; pixel < pixels; pixel += 1) {
+      const mixed = (blurred[pixel] ?? 0) * (1 - sourceMix) + (rawLuminance[pixel] ?? 0) * sourceMix;
+      const localDetail = (rawLuminance[pixel] ?? 0) - (localBlur[pixel] ?? 0);
+      const adjusted = clamp((mixed + localDetail * edgeMix - 128) * contrast + 128, 0, 255);
+      luminance[pixel] = adjusted;
+      if (!backgroundMask[pixel]) foregroundValues.push(adjusted);
+    }
+    const thresholds = settings2.profile === "portrait" ? calculatePortraitThresholds(foregroundValues, settings2.layerCount, settings2.shadowBias) : calculateToneThresholds(foregroundValues, settings2.layerCount);
+    const masks = Array.from({ length: settings2.layerCount }, () => new Uint8Array(pixels));
+    for (let pixel = 0; pixel < pixels; pixel += 1) {
+      if (backgroundMask[pixel]) continue;
+      const value = luminance[pixel] ?? 0;
+      if (settings2.profile === "portrait") {
+        masks[0][pixel] = 1;
+        for (let layer = 1; layer < settings2.layerCount; layer += 1) {
+          const thresholdIndex = thresholds.length - layer;
+          if (value <= (thresholds[thresholdIndex] ?? 255)) masks[layer][pixel] = 1;
+        }
+      } else {
+        let layer = 0;
+        while (layer < thresholds.length && value > (thresholds[layer] ?? 255)) layer += 1;
+        masks[layer][pixel] = 1;
+      }
+    }
+    const contentWidthMm = Math.max(1, settings2.page.widthMm - settings2.marginMm * 2);
+    const contentHeightMm = Math.max(1, settings2.page.heightMm - settings2.marginMm * 2);
+    const pixelsPerMm = Math.min(width / contentWidthMm, height / contentHeightMm);
+    const minimumArea = Math.max(2, Math.round(Math.pow(settings2.minDetailMm * pixelsPerMm, 2) * 0.46));
+    const bridgeWidthPx = Math.max(2, settings2.bridgeWidthMm * pixelsPerMm);
+    const layers = masks.map((mask, index) => {
+      const detailScale = settings2.profile === "portrait" ? Math.max(0.42, 1 - index * 0.12) : 1;
+      const layerMinimumArea = Math.max(2, Math.round(minimumArea * detailScale));
+      const removedPaint = removeSmallComponents(mask, width, height, layerMinimumArea);
+      const portraitFillFactors = [pixels + 1, minimumArea * 900, minimumArea * 300, minimumArea * 120, minimumArea * 45];
+      const fillArea = settings2.profile === "portrait" ? Math.max(2, Math.round(portraitFillFactors[index] ?? minimumArea * 45)) : Math.max(2, layerMinimumArea);
+      const filledHoles = fillTinyMaterialIslands(mask, width, height, fillArea);
+      const maximumBridges = settings2.profile === "portrait" ? 160 : 80;
+      const bridgeResult = autoBridgeMaterial(mask, width, height, bridgeWidthPx, maximumBridges);
+      const warnings = [];
+      const paintedPixels = mask.reduce((total, value) => total + value, 0);
+      if (paintedPixels < pixels * 2e-3) warnings.push("This layer has very little paint area.");
+      if (bridgeResult.floatingIslands > 0) warnings.push(`${bridgeResult.floatingIslands} floating material island(s) need review.`);
+      if (bridgeResult.bridges.length >= maximumBridges) warnings.push("Many islands detected: try less detail or wider bridges.");
+      return {
+        index,
+        label: settings2.profile === "portrait" ? ["Base silhouette", "Light tone", "Midtone", "Deep shadow", "Key detail"][index] ?? `Layer ${index + 1}` : `Layer ${index + 1}`,
+        color: settings2.palette[index] ?? "#111111",
+        mask,
+        bridges: bridgeResult.bridges,
+        removedFragments: removedPaint + filledHoles,
+        floatingIslands: bridgeResult.floatingIslands,
+        warnings
+      };
+    });
+    return { width, height, source, thresholds, layers, backgroundMask };
+  }
+  function removeCollinear(points) {
+    if (points.length < 8) return points;
+    const cleaned = [];
+    const pointCount = points.length / 2;
+    for (let index = 0; index < pointCount; index += 1) {
+      const previous = (index - 1 + pointCount) % pointCount;
+      const next = (index + 1) % pointCount;
+      const px = points[previous * 2] ?? 0;
+      const py = points[previous * 2 + 1] ?? 0;
+      const cx = points[index * 2] ?? 0;
+      const cy = points[index * 2 + 1] ?? 0;
+      const nx = points[next * 2] ?? 0;
+      const ny = points[next * 2 + 1] ?? 0;
+      if ((cx - px) * (ny - cy) !== (cy - py) * (nx - cx)) cleaned.push(cx, cy);
+    }
+    return cleaned.length >= 6 ? cleaned : points;
+  }
+  function maskToSvgPath(mask, width, height) {
+    const stride = width + 1;
+    const outgoing = /* @__PURE__ */ new Map();
+    const addEdge = (sx, sy, ex, ey) => {
+      const start = sy * stride + sx;
+      const end = ey * stride + ex;
+      const edges = outgoing.get(start);
+      if (edges) edges.push(end);
+      else outgoing.set(start, [end]);
+    };
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width; x += 1) {
+        const index = y * width + x;
+        if (!mask[index]) continue;
+        if (y === 0 || !mask[index - width]) addEdge(x, y, x + 1, y);
+        if (x === width - 1 || !mask[index + 1]) addEdge(x + 1, y, x + 1, y + 1);
+        if (y === height - 1 || !mask[index + width]) addEdge(x + 1, y + 1, x, y + 1);
+        if (x === 0 || !mask[index - 1]) addEdge(x, y + 1, x, y);
+      }
+    }
+    const popEdge = (start, incomingDirection) => {
+      const candidates = outgoing.get(start);
+      if (!candidates?.length) return null;
+      let selectedIndex = 0;
+      if (incomingDirection !== null && candidates.length > 1) {
+        const sx = start % stride;
+        const sy = Math.floor(start / stride);
+        const priorities = [1, 0, 3, 2];
+        let selectedPriority = Number.MAX_SAFE_INTEGER;
+        candidates.forEach((end2, index) => {
+          const ex = end2 % stride;
+          const ey = Math.floor(end2 / stride);
+          const direction = ex > sx ? 0 : ey > sy ? 1 : ex < sx ? 2 : 3;
+          const turn = (direction - incomingDirection + 4) % 4;
+          const priority = priorities.indexOf(turn);
+          if (priority < selectedPriority) {
+            selectedPriority = priority;
+            selectedIndex = index;
+          }
+        });
+      }
+      const [end] = candidates.splice(selectedIndex, 1);
+      if (!candidates.length) outgoing.delete(start);
+      return end ?? null;
+    };
+    const paths = [];
+    let safety = 0;
+    while (outgoing.size && safety < mask.length * 8) {
+      safety += 1;
+      const start = outgoing.keys().next().value;
+      if (start === void 0) break;
+      const points = [start % stride, Math.floor(start / stride)];
+      let current = start;
+      let incoming = null;
+      let loopSafety = 0;
+      while (loopSafety < mask.length * 4) {
+        loopSafety += 1;
+        const next = popEdge(current, incoming);
+        if (next === null) break;
+        const cx = current % stride;
+        const cy = Math.floor(current / stride);
+        const nx = next % stride;
+        const ny = Math.floor(next / stride);
+        incoming = nx > cx ? 0 : ny > cy ? 1 : nx < cx ? 2 : 3;
+        current = next;
+        if (current === start) break;
+        points.push(nx, ny);
+      }
+      const cleaned = removeCollinear(points);
+      if (cleaned.length >= 6) {
+        let path = `M${cleaned[0]} ${cleaned[1]}`;
+        for (let index = 2; index < cleaned.length; index += 2) path += `L${cleaned[index]} ${cleaned[index + 1]}`;
+        paths.push(`${path}Z`);
+      }
+    }
+    return paths.join("");
+  }
+  function summarizeResult(result2) {
+    return {
+      thresholdLabels: result2.thresholds.map((value) => Math.round(value).toString()),
+      totalBridges: result2.layers.reduce((sum, layer) => sum + layer.bridges.length, 0),
+      totalRemovedFragments: result2.layers.reduce((sum, layer) => sum + layer.removedFragments, 0),
+      warningCount: result2.layers.reduce((sum, layer) => sum + layer.warnings.length, 0)
+    };
+  }
+
+  // src/renderer.ts
+  var PREVIEW_EDGE = 900;
+  var PROCESS_EDGE = 820;
+  function fitDimensions(width, height, maximumEdge) {
+    if (width >= height) return { width: maximumEdge, height: Math.max(120, Math.round(maximumEdge * height / width)) };
+    return { width: Math.max(120, Math.round(maximumEdge * width / height)), height: maximumEdge };
+  }
+  function processingDimensions(settings2) {
+    const contentWidth = Math.max(1, settings2.page.widthMm - settings2.marginMm * 2);
+    const contentHeight = Math.max(1, settings2.page.heightMm - settings2.marginMm * 2);
+    return fitDimensions(contentWidth, contentHeight, PROCESS_EDGE);
+  }
+  function renderSourceImage(image, crop2, settings2, target) {
+    const canvas = target ?? document.createElement("canvas");
+    const dimensions = processingDimensions(settings2);
+    canvas.width = dimensions.width;
+    canvas.height = dimensions.height;
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    if (!context) throw new Error("The browser could not initialize the image canvas.");
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    const isQuarterTurn = crop2.rotation === 90 || crop2.rotation === 270;
+    const rotatedWidth = isQuarterTurn ? image.naturalHeight : image.naturalWidth;
+    const rotatedHeight = isQuarterTurn ? image.naturalWidth : image.naturalHeight;
+    const coverScale = Math.max(canvas.width / rotatedWidth, canvas.height / rotatedHeight);
+    const scale = coverScale * crop2.zoom;
+    context.save();
+    context.translate(canvas.width / 2 + crop2.offsetX, canvas.height / 2 + crop2.offsetY);
+    context.rotate(crop2.rotation * Math.PI / 180);
+    context.scale(scale, scale);
+    context.drawImage(image, -image.naturalWidth / 2, -image.naturalHeight / 2);
+    context.restore();
+    return canvas;
+  }
+  function drawRegistrationMarks(context, pageWidth, pageHeight, marginPx, color = "#111111") {
+    const inset = Math.max(10, marginPx * 0.48);
+    const radius = Math.max(5, marginPx * 0.16);
+    const points = [[inset, inset], [pageWidth - inset, inset], [inset, pageHeight - inset]];
+    context.save();
+    context.strokeStyle = color;
+    context.lineWidth = Math.max(1.2, radius * 0.13);
+    for (const [x = 0, y = 0] of points) {
+      context.beginPath();
+      context.arc(x, y, radius, 0, Math.PI * 2);
+      context.moveTo(x - radius * 1.5, y);
+      context.lineTo(x + radius * 1.5, y);
+      context.moveTo(x, y - radius * 1.5);
+      context.lineTo(x, y + radius * 1.5);
+      context.stroke();
+    }
+    context.restore();
+  }
+  function paintArtwork(context, result2, settings2, mode, x, y, width, height) {
+    const artwork = document.createElement("canvas");
+    artwork.width = result2.width;
+    artwork.height = result2.height;
+    const artworkContext = artwork.getContext("2d");
+    if (!artworkContext) return;
+    if (mode === "original") {
+      artworkContext.putImageData(result2.source, 0, 0);
+    } else {
+      const pixels = artworkContext.createImageData(result2.width, result2.height);
+      const background = hexToRgb(mode === "composite" ? settings2.backgroundColor : "#fffefa");
+      for (let pixel = 0; pixel < result2.width * result2.height; pixel += 1) {
+        let color = background;
+        if (mode === "composite") {
+          for (const layer of result2.layers) {
+            if (layer.mask[pixel]) color = hexToRgb(layer.color);
+          }
+        } else {
+          const layer = result2.layers[mode];
+          if (layer?.mask[pixel]) color = [17, 17, 17];
+        }
+        const offset = pixel * 4;
+        pixels.data[offset] = color[0];
+        pixels.data[offset + 1] = color[1];
+        pixels.data[offset + 2] = color[2];
+        pixels.data[offset + 3] = 255;
+      }
+      artworkContext.putImageData(pixels, 0, 0);
+    }
+    context.imageSmoothingEnabled = mode === "original";
+    context.drawImage(artwork, x, y, width, height);
+    if (typeof mode === "number") {
+      const layer = result2.layers[mode];
+      if (layer?.bridges.length) {
+        context.save();
+        context.strokeStyle = "#dc5b3f";
+        context.fillStyle = "#d8ff48";
+        context.lineWidth = Math.max(1, width / result2.width * 1.4);
+        for (const bridge of layer.bridges.slice(0, 80)) {
+          const bx = x + bridge.x / result2.width * width;
+          const by = y + bridge.y / result2.height * height;
+          const radius = Math.max(2.5, width / result2.width * 3);
+          context.beginPath();
+          context.arc(bx, by, radius, 0, Math.PI * 2);
+          context.fill();
+          context.stroke();
+        }
+        context.restore();
+      }
+    }
+  }
+  function renderPreview(canvas, result2, settings2, mode) {
+    const dimensions = fitDimensions(settings2.page.widthMm, settings2.page.heightMm, PREVIEW_EDGE);
+    canvas.width = dimensions.width;
+    canvas.height = dimensions.height;
+    const context = canvas.getContext("2d");
+    if (!context) return;
+    context.fillStyle = "#fffefa";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    const scaleX = canvas.width / settings2.page.widthMm;
+    const scaleY = canvas.height / settings2.page.heightMm;
+    const marginX = settings2.marginMm * scaleX;
+    const marginY = settings2.marginMm * scaleY;
+    const contentWidth = canvas.width - marginX * 2;
+    const contentHeight = canvas.height - marginY * 2;
+    paintArtwork(context, result2, settings2, mode, marginX, marginY, contentWidth, contentHeight);
+    drawRegistrationMarks(context, canvas.width, canvas.height, Math.min(marginX, marginY));
+    context.save();
+    context.fillStyle = "#34342f";
+    context.font = `700 ${Math.max(8, canvas.width * 0.012)}px Segoe UI, sans-serif`;
+    context.textAlign = "right";
+    const label = typeof mode === "number" ? `LAYER ${mode + 1} \xB7 ${result2.layers[mode]?.color.toUpperCase() ?? ""}` : mode === "original" ? "ORIGINAL \xB7 NOT A CUT FILE" : "COMPOSITE PREVIEW";
+    context.fillText(label, canvas.width - marginX * 0.45, canvas.height - marginY * 0.28);
+    context.restore();
+  }
+  function pagePointToSource(canvas, clientX, clientY, settings2, result2) {
+    const rect = canvas.getBoundingClientRect();
+    const canvasX = (clientX - rect.left) / rect.width * canvas.width;
+    const canvasY = (clientY - rect.top) / rect.height * canvas.height;
+    const marginX = settings2.marginMm / settings2.page.widthMm * canvas.width;
+    const marginY = settings2.marginMm / settings2.page.heightMm * canvas.height;
+    const contentWidth = canvas.width - marginX * 2;
+    const contentHeight = canvas.height - marginY * 2;
+    if (canvasX < marginX || canvasY < marginY || canvasX > marginX + contentWidth || canvasY > marginY + contentHeight) return null;
+    return {
+      x: Math.min(result2.width - 1, Math.max(0, Math.floor((canvasX - marginX) / contentWidth * result2.width))),
+      y: Math.min(result2.height - 1, Math.max(0, Math.floor((canvasY - marginY) / contentHeight * result2.height)))
+    };
+  }
+  function registrationSvg(pageWidth, pageHeight, margin, color) {
+    const inset = margin * 0.48;
+    const radius = Math.max(1.8, margin * 0.16);
+    const points = [[inset, inset], [pageWidth - inset, inset], [inset, pageHeight - inset]];
+    return points.map(([x = 0, y = 0]) => `<g transform="translate(${x.toFixed(3)} ${y.toFixed(3)})"><circle r="${radius.toFixed(3)}" fill="none" stroke="${color}" stroke-width="0.5"/><path d="M${(-radius * 1.5).toFixed(3)} 0H${(radius * 1.5).toFixed(3)}M0 ${(-radius * 1.5).toFixed(3)}V${(radius * 1.5).toFixed(3)}" fill="none" stroke="${color}" stroke-width="0.5"/></g>`).join("");
+  }
+  function svgHeader(settings2, description) {
+    const { widthMm, heightMm } = settings2.page;
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${widthMm}mm" height="${heightMm}mm" viewBox="0 0 ${widthMm} ${heightMm}" role="img"><title>Stencil Builder</title><desc>${description}</desc>`;
+  }
+  function artworkTransform(result2, settings2) {
+    const contentWidth = settings2.page.widthMm - settings2.marginMm * 2;
+    const contentHeight = settings2.page.heightMm - settings2.marginMm * 2;
+    return `translate(${settings2.marginMm} ${settings2.marginMm}) scale(${contentWidth / result2.width} ${contentHeight / result2.height})`;
+  }
+  function createLayerSvg(result2, settings2, layerIndex) {
+    const layer = result2.layers[layerIndex];
+    if (!layer) throw new Error("The layer does not exist.");
+    const path = maskToSvgPath(layer.mask, result2.width, result2.height);
+    const { widthMm, heightMm } = settings2.page;
+    return `${svgHeader(settings2, `Cut file for layer ${layerIndex + 1}. Paint color ${layer.color}.`)}<rect width="${widthMm}" height="${heightMm}" fill="#fff"/><g id="registration-marks">${registrationSvg(widthMm, heightMm, settings2.marginMm, "#111")}</g><g id="layer-${layerIndex + 1}-cut" transform="${artworkTransform(result2, settings2)}" fill="#111" fill-rule="evenodd"><path d="${path}"/></g><g id="information" fill="#333" font-family="Arial,sans-serif" font-size="3.5"><text x="${widthMm - settings2.marginMm * 0.45}" y="${heightMm - settings2.marginMm * 0.28}" text-anchor="end">LAYER ${layerIndex + 1} \xB7 ${layer.color.toUpperCase()}</text></g></svg>`;
+  }
+  function createCombinedSvg(result2, settings2) {
+    const { widthMm, heightMm } = settings2.page;
+    const groups = result2.layers.map((layer) => `<g id="layer-${layer.index + 1}" transform="${artworkTransform(result2, settings2)}" fill="${layer.color}" fill-rule="evenodd"><path d="${maskToSvgPath(layer.mask, result2.width, result2.height)}"/></g>`).join("");
+    return `${svgHeader(settings2, "Combined color preview with named stencil layers.")}<rect width="${widthMm}" height="${heightMm}" fill="${settings2.backgroundColor}"/>${groups}<g id="registration-marks">${registrationSvg(widthMm, heightMm, settings2.marginMm, "#111")}</g><g id="information" fill="#333" font-family="Arial,sans-serif" font-size="3.5"><text x="${widthMm - settings2.marginMm * 0.45}" y="${heightMm - settings2.marginMm * 0.28}" text-anchor="end">COMPOSITE PREVIEW \xB7 ${result2.layers.length} LAYERS</text></g></svg>`;
+  }
+  function renderExportCanvas(result2, settings2, mode) {
+    const desiredPixelsPerMm = 150 / 25.4;
+    const maximumEdge = 6e3;
+    const scale = Math.min(desiredPixelsPerMm, maximumEdge / Math.max(settings2.page.widthMm, settings2.page.heightMm));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(settings2.page.widthMm * scale));
+    canvas.height = Math.max(1, Math.round(settings2.page.heightMm * scale));
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("The browser could not create the export canvas.");
+    context.fillStyle = mode === "composite" ? settings2.backgroundColor : "#ffffff";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    const marginX = settings2.marginMm * scale;
+    const marginY = settings2.marginMm * scale;
+    paintArtwork(context, result2, settings2, mode, marginX, marginY, canvas.width - marginX * 2, canvas.height - marginY * 2);
+    drawRegistrationMarks(context, canvas.width, canvas.height, Math.min(marginX, marginY));
+    context.fillStyle = "#333";
+    context.font = `700 ${Math.max(11, 3.5 * scale)}px Arial, sans-serif`;
+    context.textAlign = "right";
+    const label = mode === "composite" ? `COMPOSITE PREVIEW \xB7 ${result2.layers.length} LAYERS` : `LAYER ${mode + 1} \xB7 ${result2.layers[mode]?.color.toUpperCase() ?? ""}`;
+    context.fillText(label, canvas.width - marginX * 0.45, canvas.height - marginY * 0.28);
+    return canvas;
+  }
+  function canvasToBlob(canvas) {
+    return new Promise((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("The PNG file could not be created.")), "image/png"));
+  }
+
+  // src/app.ts
+  var byId = (id) => {
+    const element = document.getElementById(id);
+    if (!element) throw new Error(`Missing element #${id}`);
+    return element;
+  };
+  var elements = {
+    fileInput: byId("file-input"),
+    dropzone: byId("dropzone"),
+    fileSummary: byId("file-summary"),
+    fileName: byId("file-name"),
+    fileMeta: byId("file-meta"),
+    fileError: byId("file-error"),
+    thumbCanvas: byId("thumb-canvas"),
+    replaceImage: byId("replace-image"),
+    zoom: byId("zoom"),
+    zoomValue: byId("zoom-value"),
+    rotateLeft: byId("rotate-left"),
+    resetCrop: byId("reset-crop"),
+    sampleSwatch: byId("sample-swatch"),
+    sampleHelp: byId("sample-help"),
+    clearSample: byId("clear-sample"),
+    tolerance: byId("background-tolerance"),
+    toleranceValue: byId("tolerance-value"),
+    contrast: byId("contrast"),
+    contrastValue: byId("contrast-value"),
+    detail: byId("detail"),
+    detailValue: byId("detail-value"),
+    edgeStrength: byId("edge-strength"),
+    edgeStrengthValue: byId("edge-strength-value"),
+    shadowBias: byId("shadow-bias"),
+    shadowBiasValue: byId("shadow-bias-value"),
+    minDetail: byId("min-detail"),
+    minDetailValue: byId("min-detail-value"),
+    bridgeWidth: byId("bridge-width"),
+    bridgeWidthValue: byId("bridge-width-value"),
+    palette: byId("palette"),
+    paperPreset: byId("paper-preset"),
+    orientation: byId("orientation"),
+    pageWidth: byId("page-width"),
+    pageHeight: byId("page-height"),
+    previewTabs: byId("preview-tabs"),
+    qualityBadge: byId("quality-badge"),
+    stage: byId("stage"),
+    previewCanvas: byId("preview-canvas"),
+    emptyState: byId("empty-state"),
+    processing: byId("processing"),
+    canvasHint: byId("canvas-hint"),
+    resultPanel: byId("result-panel"),
+    statLayers: byId("stat-layers"),
+    statBridges: byId("stat-bridges"),
+    statFragments: byId("stat-fragments"),
+    warningList: byId("warning-list"),
+    layerExports: byId("layer-exports"),
+    exportCompositePng: byId("export-composite-png"),
+    exportCombinedSvg: byId("export-combined-svg"),
+    toast: byId("toast")
+  };
+  var DEFAULT_PALETTES = {
+    3: ["#efb0b4", "#9a3048", "#171419"],
+    4: ["#efb0b4", "#ca6475", "#76253a", "#171419"],
+    5: ["#efb0b4", "#cf6a7b", "#9a3048", "#532333", "#171419"]
+  };
+  var settings = {
+    layerCount: 5,
+    profile: "portrait",
+    contrast: 122,
+    detail: 68,
+    edgeStrength: 72,
+    shadowBias: 58,
+    minDetailMm: 1.5,
+    bridgeWidthMm: 2.5,
+    backgroundTolerance: 28,
+    backgroundSample: null,
+    backgroundSeed: null,
+    backgroundRegions: [],
+    backgroundColor: "#f7efe4",
+    palette: [...DEFAULT_PALETTES[5]],
+    page: { widthMm: 210, heightMm: 297 },
+    marginMm: 14
+  };
+  var sourceImage = null;
+  var sourceFile = null;
+  var result = null;
+  var previewMode = "composite";
+  var interactionTool = "move";
+  var crop = { zoom: 1, offsetX: 0, offsetY: 0, rotation: 0 };
+  var processTimer = 0;
+  var processGeneration = 0;
+  var toastTimer = 0;
+  var pointerStart = null;
+  function formatNumber(value) {
+    return value.toLocaleString("en-GB", { maximumFractionDigits: 1 });
+  }
+  function formatBytes(bytes) {
+    if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} kB`;
+    return `${(bytes / (1024 * 1024)).toLocaleString("en-GB", { maximumFractionDigits: 1 })} MB`;
+  }
+  function showError(message) {
+    elements.fileError.textContent = message;
+    elements.fileError.hidden = false;
+  }
+  function clearError() {
+    elements.fileError.hidden = true;
+    elements.fileError.textContent = "";
+  }
+  function showToast(message) {
+    window.clearTimeout(toastTimer);
+    elements.toast.textContent = message;
+    elements.toast.classList.add("is-visible");
+    toastTimer = window.setTimeout(() => elements.toast.classList.remove("is-visible"), 2600);
+  }
+  function defaultPalette(count) {
+    return [...DEFAULT_PALETTES[count]];
+  }
+  function renderPalette() {
+    elements.palette.innerHTML = "";
+    settings.palette.slice(0, settings.layerCount).forEach((color, index) => {
+      const row = document.createElement("label");
+      row.className = "palette-row";
+      const role = index === 0 ? "base silhouette" : index === settings.layerCount - 1 ? "key detail" : index === settings.layerCount - 2 ? "deep shadow" : "tone";
+      row.innerHTML = `<span class="palette-order">${index + 1}</span><strong>Layer ${index + 1} \xB7 ${role}</strong><input type="color" value="${color}" aria-label="Color for layer ${index + 1}"><span>${color.toUpperCase()}</span>`;
+      const input2 = row.querySelector("input");
+      const value2 = row.querySelectorAll("span")[1];
+      input2?.addEventListener("input", () => {
+        settings.palette[index] = input2.value;
+        if (value2) value2.textContent = input2.value.toUpperCase();
+        if (result?.layers[index]) result.layers[index].color = input2.value;
+        renderCurrentPreview();
+        renderExports();
+      });
+      elements.palette.append(row);
+    });
+    const background = document.createElement("label");
+    background.className = "palette-row";
+    background.innerHTML = `<span class="palette-order">B</span><strong>Paper / background</strong><input type="color" value="${settings.backgroundColor}" aria-label="Paper and background color"><span>${settings.backgroundColor.toUpperCase()}</span>`;
+    const input = background.querySelector("input");
+    const value = background.querySelectorAll("span")[1];
+    input?.addEventListener("input", () => {
+      settings.backgroundColor = input.value;
+      if (value) value.textContent = input.value.toUpperCase();
+      renderCurrentPreview();
+    });
+    elements.palette.append(background);
+  }
+  function renderThumbnail(image) {
+    const canvas = elements.thumbCanvas;
+    canvas.width = 112;
+    canvas.height = 112;
+    const context = canvas.getContext("2d");
+    if (!context) return;
+    const scale = Math.max(canvas.width / image.naturalWidth, canvas.height / image.naturalHeight);
+    const width = image.naturalWidth * scale;
+    const height = image.naturalHeight * scale;
+    context.drawImage(image, (canvas.width - width) / 2, (canvas.height - height) / 2, width, height);
+  }
+  async function loadFile(file) {
+    clearError();
+    const supported = ["image/jpeg", "image/png", "image/webp"];
+    if (!supported.includes(file.type)) {
+      showError("This format is not supported. Use JPG, PNG or WebP.");
+      return;
+    }
+    if (file.size > 80 * 1024 * 1024) {
+      showError("The image is larger than 80 MB. Choose a smaller file.");
+      return;
+    }
+    const objectUrl = URL.createObjectURL(file);
+    const image = new Image();
+    try {
+      await new Promise((resolve, reject) => {
+        image.onload = () => resolve();
+        image.onerror = () => reject(new Error("The image could not be read."));
+        image.src = objectUrl;
+      });
+    } catch (error) {
+      URL.revokeObjectURL(objectUrl);
+      showError(error instanceof Error ? error.message : "The image could not be read.");
+      return;
+    }
+    URL.revokeObjectURL(objectUrl);
+    sourceImage = image;
+    sourceFile = file;
+    result = null;
+    crop = { zoom: 1, offsetX: 0, offsetY: 0, rotation: 0 };
+    settings.backgroundSample = null;
+    settings.backgroundSeed = null;
+    settings.backgroundRegions = [];
+    elements.zoom.value = "100";
+    updateOutputLabels();
+    updateBackgroundSampleUi();
+    elements.fileName.textContent = file.name;
+    elements.fileMeta.textContent = `${image.naturalWidth} \xD7 ${image.naturalHeight} px \xB7 ${formatBytes(file.size)}`;
+    elements.dropzone.hidden = true;
+    elements.fileSummary.hidden = false;
+    renderThumbnail(image);
+    elements.stage.classList.remove("is-empty");
+    elements.stage.classList.add("has-image");
+    elements.emptyState.hidden = true;
+    previewMode = "composite";
+    scheduleProcessing(0);
+  }
+  function updateOutputLabels() {
+    elements.zoomValue.textContent = `${Math.round(crop.zoom * 100)} %`;
+    elements.toleranceValue.textContent = `${settings.backgroundTolerance}`;
+    elements.contrastValue.textContent = `${settings.contrast} %`;
+    elements.detailValue.textContent = `${settings.detail} %`;
+    elements.edgeStrengthValue.textContent = `${settings.edgeStrength} %`;
+    elements.shadowBiasValue.textContent = `${settings.shadowBias} %`;
+    elements.minDetailValue.textContent = `${formatNumber(settings.minDetailMm)} mm`;
+    elements.bridgeWidthValue.textContent = `${formatNumber(settings.bridgeWidthMm)} mm`;
+  }
+  function updateBackgroundSampleUi() {
+    const sample = settings.backgroundSample;
+    elements.clearSample.disabled = !sample;
+    elements.sampleSwatch.classList.toggle("is-empty", !sample);
+    if (sample) {
+      elements.sampleSwatch.style.background = `rgb(${sample.join(",")})`;
+      elements.sampleHelp.textContent = `${settings.backgroundRegions.length} area(s) \xB7 latest RGB ${sample.join(" \xB7 ")}`;
+    } else {
+      elements.sampleSwatch.style.removeProperty("background");
+      elements.sampleHelp.textContent = "Choose the tool and click one or more background areas.";
+    }
+  }
+  function setProcessing(active) {
+    elements.processing.hidden = !active;
+    elements.previewCanvas.setAttribute("aria-busy", String(active));
+  }
+  function scheduleProcessing(delay = 120) {
+    if (!sourceImage) return;
+    window.clearTimeout(processTimer);
+    const generation = ++processGeneration;
+    setProcessing(true);
+    processTimer = window.setTimeout(() => {
+      window.setTimeout(() => {
+        if (!sourceImage || generation !== processGeneration) return;
+        try {
+          const canvas = renderSourceImage(sourceImage, crop, settings);
+          const context = canvas.getContext("2d", { willReadFrequently: true });
+          if (!context) throw new Error("The image could not be processed.");
+          const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+          result = processStencil(imageData, settings);
+          if (generation !== processGeneration) return;
+          updateResultUi();
+        } catch (error) {
+          showError(error instanceof Error ? error.message : "The image could not be processed.");
+        } finally {
+          if (generation === processGeneration) setProcessing(false);
+        }
+      }, 0);
+    }, delay);
+  }
+  function renderPreviewTabs() {
+    const tabs = [
+      { mode: "original", label: "Original" },
+      { mode: "composite", label: "Composite" },
+      ...Array.from({ length: settings.layerCount }, (_, index) => ({ mode: index, label: `Layer ${index + 1}` }))
+    ];
+    if (typeof previewMode === "number" && previewMode >= settings.layerCount) previewMode = "composite";
+    elements.previewTabs.innerHTML = "";
+    for (const tab of tabs) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.role = "tab";
+      button.textContent = tab.label;
+      button.dataset.preview = String(tab.mode);
+      const active = tab.mode === previewMode;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-selected", String(active));
+      button.addEventListener("click", () => {
+        previewMode = tab.mode;
+        renderPreviewTabs();
+        renderCurrentPreview();
+      });
+      elements.previewTabs.append(button);
+    }
+  }
+  function renderCurrentPreview() {
+    if (!result) return;
+    renderPreview(elements.previewCanvas, result, settings, previewMode);
+    const modeLabel = typeof previewMode === "number" ? `stencil layer ${previewMode + 1}` : previewMode === "original" ? "original image" : "composite stencil";
+    elements.previewCanvas.setAttribute("aria-label", `Preview of ${modeLabel}`);
+  }
+  function renderExports() {
+    elements.layerExports.innerHTML = "";
+    if (!result) return;
+    result.layers.forEach((layer, index) => {
+      const row = document.createElement("div");
+      row.className = "layer-export";
+      row.innerHTML = `<div class="layer-export-meta"><span class="layer-color" style="background:${layer.color}"></span><div><span class="file-kind">CUT FILE ${index + 1}</span><strong>${layer.label}</strong><small>${layer.bridges.length} bridge(s) added \xB7 paint color ${layer.color.toUpperCase()}</small></div></div><div class="export-actions"><button type="button" data-format="png">PNG</button><button type="button" data-format="svg">SVG</button></div>`;
+      row.querySelectorAll("button").forEach((button) => button.addEventListener("click", () => void exportLayer(index, button.dataset.format)));
+      elements.layerExports.append(row);
+    });
+  }
+  function updateResultUi() {
+    if (!result) return;
+    const summary = summarizeResult(result);
+    renderPreviewTabs();
+    renderCurrentPreview();
+    renderExports();
+    elements.resultPanel.hidden = false;
+    elements.statLayers.textContent = String(result.layers.length);
+    elements.statBridges.textContent = String(summary.totalBridges);
+    elements.statFragments.textContent = String(summary.totalRemovedFragments);
+    const warnings = result.layers.flatMap((layer) => layer.warnings.map((warning) => `${layer.label}: ${warning}`));
+    elements.warningList.hidden = warnings.length === 0;
+    elements.warningList.innerHTML = warnings.map((warning) => `<div>\u26A0 ${warning}</div>`).join("");
+    elements.qualityBadge.className = `quality-badge ${warnings.length ? "is-warning" : "is-ready"}`;
+    elements.qualityBadge.innerHTML = warnings.length ? `<span aria-hidden="true">!</span><strong>${warnings.length} check(s)</strong>` : `<span aria-hidden="true">\u25CF</span><strong>Ready to cut</strong>`;
+  }
+  function selectTool(tool) {
+    interactionTool = tool;
+    document.querySelectorAll("[data-tool]").forEach((button) => button.classList.toggle("is-active", button.dataset.tool === tool));
+    if (tool === "background") {
+      previewMode = "original";
+      elements.canvasHint.hidden = false;
+      elements.canvasHint.textContent = "Click a flat background color inside the image";
+      renderPreviewTabs();
+      renderCurrentPreview();
+    } else {
+      elements.canvasHint.hidden = true;
+    }
+  }
+  function applyPaperSize() {
+    const preset = elements.paperPreset.value;
+    const orientation = elements.orientation.value;
+    const custom = preset === "custom";
+    elements.pageWidth.disabled = !custom;
+    elements.pageHeight.disabled = !custom;
+    if (!custom) {
+      const dimensions = preset === "A3" ? [297, 420] : [210, 297];
+      const [short = 210, long = 297] = dimensions;
+      settings.page.widthMm = orientation === "portrait" ? short : long;
+      settings.page.heightMm = orientation === "portrait" ? long : short;
+      elements.pageWidth.value = String(settings.page.widthMm);
+      elements.pageHeight.value = String(settings.page.heightMm);
+    } else {
+      const first = clamp(Number(elements.pageWidth.value) || 210, 80, 2e3);
+      const second = clamp(Number(elements.pageHeight.value) || 297, 80, 2e3);
+      settings.page.widthMm = orientation === "portrait" ? Math.min(first, second) : Math.max(first, second);
+      settings.page.heightMm = orientation === "portrait" ? Math.max(first, second) : Math.min(first, second);
+      elements.pageWidth.value = String(settings.page.widthMm);
+      elements.pageHeight.value = String(settings.page.heightMm);
+    }
+    crop.offsetX = 0;
+    crop.offsetY = 0;
+    scheduleProcessing(50);
+  }
+  function safeBaseName() {
+    return (sourceFile?.name.replace(/\.[^.]+$/, "") ?? "stencil").normalize("NFKD").replace(/[^a-zA-Z0-9-_]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "stencil";
+  }
+  function download(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = filename;
+    document.body.append(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1e3);
+  }
+  async function exportLayer(index, format) {
+    if (!result) return;
+    try {
+      if (format === "svg") {
+        download(new Blob([createLayerSvg(result, settings, index)], { type: "image/svg+xml;charset=utf-8" }), `${safeBaseName()}-layer-${index + 1}.svg`);
+      } else {
+        const canvas = renderExportCanvas(result, settings, index);
+        download(await canvasToBlob(canvas), `${safeBaseName()}-layer-${index + 1}.png`);
+      }
+      showToast(`Layer ${index + 1} was exported as ${format.toUpperCase()}.`);
+    } catch (error) {
+      showError(error instanceof Error ? error.message : "The export failed.");
+    }
+  }
+  async function exportCompositePng() {
+    if (!result) return;
+    try {
+      download(await canvasToBlob(renderExportCanvas(result, settings, "composite")), `${safeBaseName()}-composite.png`);
+      showToast("The composite PNG was exported.");
+    } catch (error) {
+      showError(error instanceof Error ? error.message : "The export failed.");
+    }
+  }
+  function exportCombinedSvg() {
+    if (!result) return;
+    try {
+      download(new Blob([createCombinedSvg(result, settings)], { type: "image/svg+xml;charset=utf-8" }), `${safeBaseName()}-combined.svg`);
+      showToast("The combined SVG with named layers was exported.");
+    } catch (error) {
+      showError(error instanceof Error ? error.message : "The export failed.");
+    }
+  }
+  function handleCanvasBackgroundSample(clientX, clientY) {
+    if (!result) return;
+    const point = pagePointToSource(elements.previewCanvas, clientX, clientY, settings, result);
+    if (!point) {
+      showToast("Click inside the artwork area, not in the page margin.");
+      return;
+    }
+    const offset = (point.y * result.width + point.x) * 4;
+    settings.backgroundSample = [result.source.data[offset] ?? 0, result.source.data[offset + 1] ?? 0, result.source.data[offset + 2] ?? 0];
+    settings.backgroundSeed = [point.x / Math.max(1, result.width - 1), point.y / Math.max(1, result.height - 1)];
+    settings.backgroundRegions.push({ sample: [...settings.backgroundSample], seed: [...settings.backgroundSeed] });
+    if (settings.backgroundRegions.length > 8) settings.backgroundRegions.shift();
+    updateBackgroundSampleUi();
+    scheduleProcessing(30);
+  }
+  elements.fileInput.addEventListener("change", () => {
+    const file = elements.fileInput.files?.[0];
+    if (file) void loadFile(file);
+  });
+  elements.replaceImage.addEventListener("click", () => {
+    elements.fileInput.value = "";
+    elements.fileInput.click();
+  });
+  elements.dropzone.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      elements.fileInput.click();
+    }
+  });
+  for (const eventName of ["dragenter", "dragover"]) {
+    elements.dropzone.addEventListener(eventName, (event) => {
+      event.preventDefault();
+      elements.dropzone.classList.add("is-dragging");
+    });
+  }
+  for (const eventName of ["dragleave", "drop"]) {
+    elements.dropzone.addEventListener(eventName, (event) => {
+      event.preventDefault();
+      elements.dropzone.classList.remove("is-dragging");
+    });
+  }
+  elements.dropzone.addEventListener("drop", (event) => {
+    const file = event.dataTransfer?.files[0];
+    if (file) void loadFile(file);
+  });
+  document.querySelectorAll("[data-tool]").forEach((button) => button.addEventListener("click", () => selectTool(button.dataset.tool)));
+  elements.zoom.addEventListener("input", () => {
+    crop.zoom = Number(elements.zoom.value) / 100;
+    updateOutputLabels();
+    scheduleProcessing();
+  });
+  elements.rotateLeft.addEventListener("click", () => {
+    crop.rotation = (crop.rotation + 270) % 360;
+    crop.offsetX = 0;
+    crop.offsetY = 0;
+    scheduleProcessing(30);
+  });
+  elements.resetCrop.addEventListener("click", () => {
+    crop = { zoom: 1, offsetX: 0, offsetY: 0, rotation: 0 };
+    elements.zoom.value = "100";
+    updateOutputLabels();
+    scheduleProcessing(30);
+  });
+  elements.clearSample.addEventListener("click", () => {
+    settings.backgroundSample = null;
+    settings.backgroundSeed = null;
+    settings.backgroundRegions = [];
+    updateBackgroundSampleUi();
+    scheduleProcessing(30);
+  });
+  elements.tolerance.addEventListener("input", () => {
+    settings.backgroundTolerance = Number(elements.tolerance.value);
+    updateOutputLabels();
+    if (settings.backgroundRegions.length || settings.backgroundSample) scheduleProcessing();
+  });
+  elements.contrast.addEventListener("input", () => {
+    settings.contrast = Number(elements.contrast.value);
+    updateOutputLabels();
+    scheduleProcessing();
+  });
+  elements.detail.addEventListener("input", () => {
+    settings.detail = Number(elements.detail.value);
+    updateOutputLabels();
+    scheduleProcessing();
+  });
+  elements.edgeStrength.addEventListener("input", () => {
+    settings.edgeStrength = Number(elements.edgeStrength.value);
+    updateOutputLabels();
+    scheduleProcessing();
+  });
+  elements.shadowBias.addEventListener("input", () => {
+    settings.shadowBias = Number(elements.shadowBias.value);
+    updateOutputLabels();
+    scheduleProcessing();
+  });
+  elements.minDetail.addEventListener("input", () => {
+    settings.minDetailMm = Number(elements.minDetail.value);
+    updateOutputLabels();
+    scheduleProcessing();
+  });
+  elements.bridgeWidth.addEventListener("input", () => {
+    settings.bridgeWidthMm = Number(elements.bridgeWidth.value);
+    updateOutputLabels();
+    scheduleProcessing();
+  });
+  document.querySelectorAll('input[name="layer-count"]').forEach((input) => input.addEventListener("change", () => {
+    settings.layerCount = Number(input.value);
+    settings.palette = defaultPalette(settings.layerCount);
+    renderPalette();
+    scheduleProcessing(30);
+  }));
+  document.querySelectorAll("[data-profile]").forEach((button) => button.addEventListener("click", () => {
+    settings.profile = button.dataset.profile === "classic" ? "classic" : "portrait";
+    document.querySelectorAll("[data-profile]").forEach((candidate) => {
+      const active = candidate.dataset.profile === settings.profile;
+      candidate.classList.toggle("is-active", active);
+      candidate.setAttribute("aria-pressed", String(active));
+    });
+    scheduleProcessing(30);
+  }));
+  elements.paperPreset.addEventListener("change", applyPaperSize);
+  elements.orientation.addEventListener("change", applyPaperSize);
+  for (const input of [elements.pageWidth, elements.pageHeight]) input.addEventListener("change", applyPaperSize);
+  elements.previewCanvas.addEventListener("pointerdown", (event) => {
+    if (!result) return;
+    elements.previewCanvas.setPointerCapture(event.pointerId);
+    pointerStart = { x: event.clientX, y: event.clientY, offsetX: crop.offsetX, offsetY: crop.offsetY, moved: false };
+  });
+  elements.previewCanvas.addEventListener("pointermove", (event) => {
+    if (!pointerStart || interactionTool !== "move" || !result) return;
+    const rect = elements.previewCanvas.getBoundingClientRect();
+    const dx = (event.clientX - pointerStart.x) / rect.width * result.width;
+    const dy = (event.clientY - pointerStart.y) / rect.height * result.height;
+    if (Math.abs(dx) + Math.abs(dy) > 2) pointerStart.moved = true;
+    crop.offsetX = clamp(pointerStart.offsetX + dx, -result.width * 0.55, result.width * 0.55);
+    crop.offsetY = clamp(pointerStart.offsetY + dy, -result.height * 0.55, result.height * 0.55);
+    scheduleProcessing(90);
+  });
+  elements.previewCanvas.addEventListener("pointerup", (event) => {
+    if (!pointerStart) return;
+    const wasClick = !pointerStart.moved;
+    pointerStart = null;
+    if (interactionTool === "background" && wasClick) handleCanvasBackgroundSample(event.clientX, event.clientY);
+    else if (interactionTool === "move") scheduleProcessing(10);
+  });
+  elements.previewCanvas.addEventListener("pointercancel", () => {
+    pointerStart = null;
+  });
+  elements.previewCanvas.addEventListener("keydown", (event) => {
+    if (interactionTool !== "move" || !result || !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) return;
+    event.preventDefault();
+    const amount = event.shiftKey ? 20 : 5;
+    if (event.key === "ArrowLeft") crop.offsetX -= amount;
+    if (event.key === "ArrowRight") crop.offsetX += amount;
+    if (event.key === "ArrowUp") crop.offsetY -= amount;
+    if (event.key === "ArrowDown") crop.offsetY += amount;
+    scheduleProcessing(40);
+  });
+  elements.exportCompositePng.addEventListener("click", () => void exportCompositePng());
+  elements.exportCombinedSvg.addEventListener("click", exportCombinedSvg);
+  window.addEventListener("error", (event) => showError(`Unexpected error: ${event.message}`));
+  renderPalette();
+  updateOutputLabels();
+  updateBackgroundSampleUi();
+})();
+</script>
+</body>
+</html>
