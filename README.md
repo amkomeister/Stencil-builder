@@ -23,7 +23,7 @@ See [PRIVACY.md](PRIVACY.md) for the complete privacy note.
 - Cleanup of small fragments, detection of floating material islands and automatic physical bridges
 - Separate colors for every paint layer and a combined preview
 - Matching registration marks on every cut file
-- A4, A3, portrait, landscape and custom millimetre dimensions
+- A5 (half of A4), A4, A3, A2, A1, A0, portrait, landscape and custom millimetre dimensions
 - Individual black-and-white PNG and SVG exports
 - Combined color PNG and named-layer SVG exports
 - Mouse, keyboard and touch support
@@ -37,6 +37,21 @@ See [PRIVACY.md](PRIVACY.md) for the complete privacy note.
 5. On each individual cut file, cut out the black areas and spray through those openings. Use the registration marks to align every layer and paint from light to dark.
 
 The HTML file is self-contained and works offline.
+
+## Paper formats and printing
+
+Choose a format under **Page and size**. All presets support portrait and landscape:
+
+| Format | Portrait dimensions | Size compared with A4 |
+| --- | --- | --- |
+| A5 | 148 × 210 mm | Half |
+| A4 | 210 × 297 mm | Standard |
+| A3 | 297 × 420 mm | Twice as large |
+| A2 | 420 × 594 mm | Four times as large |
+| A1 | 594 × 841 mm | Eight times as large |
+| A0 | 841 × 1189 mm | Sixteen times as large |
+
+Custom sizes can be set from 80 to 2000 mm per side. For accurate physical dimensions, export each layer as **SVG**, select the matching paper size in your printing application and print at **100% / actual size**. Large formats need a compatible printer or a print shop. Automatic splitting across A4 or A3 sheets is not included.
 
 ## Development
 
