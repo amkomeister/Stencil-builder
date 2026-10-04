@@ -93,11 +93,20 @@
       <section class="step-card" aria-labelledby="paper-title">
         <div class="step-heading"><span>04</span><h2 id="paper-title">Page and size</h2></div>
         <div class="field-grid">
-          <label>Format<select id="paper-preset"><option value="A4">A4</option><option value="A3">A3</option><option value="custom">Custom size</option></select></label>
+          <label>Format<select id="paper-preset">
+            <option value="A5">A5 (half of A4)</option>
+            <option value="A4" selected>A4</option>
+            <option value="A3">A3</option>
+            <option value="A2">A2</option>
+            <option value="A1">A1</option>
+            <option value="A0">A0</option>
+            <option value="custom">Custom size</option>
+          </select></label>
           <label>Orientation<select id="orientation"><option value="portrait">Portrait</option><option value="landscape">Landscape</option></select></label>
           <label>Width (mm)<input id="page-width" type="number" value="210" min="80" max="2000" step="1" disabled></label>
           <label>Height (mm)<input id="page-height" type="number" value="297" min="80" max="2000" step="1" disabled></label>
         </div>
+        <p class="print-note">For accurate sizing, export SVG and print at 100% / actual size. Large formats need a compatible printer or print shop; sheets are not split automatically.</p>
       </section>
     </aside>
 

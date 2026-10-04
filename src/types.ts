@@ -1,6 +1,6 @@
 export type LayerCount = 3 | 4 | 5;
 export type Orientation = "portrait" | "landscape";
-export type PaperPreset = "A4" | "A3" | "custom";
+export type PaperPreset = "A5" | "A4" | "A3" | "A2" | "A1" | "A0" | "custom";
 export type PreviewMode = "original" | "composite" | number;
 export type InteractionTool = "move" | "background";
 export type ProcessingProfile = "portrait" | "classic";

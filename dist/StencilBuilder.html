@@ -234,6 +234,7 @@ input[type="range"] { width: 100%; accent-color: var(--ink); }
 .field-grid label { display: grid; gap: 6px; font-size: 11px; font-weight: 750; }
 .field-grid select, .field-grid input { min-width: 0; width: 100%; min-height: 40px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px; color: var(--ink); background: rgba(255,255,255,.6); }
 .field-grid input:disabled { color: var(--muted); background: rgba(25,25,23,.04); cursor: not-allowed; }
+.print-note { margin: 12px 0 0; color: var(--ink-soft); font-size: 11px; line-height: 1.5; }
 
 .stage-column { min-width: 0; padding: 24px clamp(18px, 3vw, 46px) 58px; }
 .stage-toolbar { min-height: 46px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 18px; }
@@ -457,11 +458,20 @@ footer strong { color: var(--ink); font-family: "Arial Black", sans-serif; }
       <section class="step-card" aria-labelledby="paper-title">
         <div class="step-heading"><span>04</span><h2 id="paper-title">Page and size</h2></div>
         <div class="field-grid">
-          <label>Format<select id="paper-preset"><option value="A4">A4</option><option value="A3">A3</option><option value="custom">Custom size</option></select></label>
+          <label>Format<select id="paper-preset">
+            <option value="A5">A5 (half of A4)</option>
+            <option value="A4" selected>A4</option>
+            <option value="A3">A3</option>
+            <option value="A2">A2</option>
+            <option value="A1">A1</option>
+            <option value="A0">A0</option>
+            <option value="custom">Custom size</option>
+          </select></label>
           <label>Orientation<select id="orientation"><option value="portrait">Portrait</option><option value="landscape">Landscape</option></select></label>
           <label>Width (mm)<input id="page-width" type="number" value="210" min="80" max="2000" step="1" disabled></label>
           <label>Height (mm)<input id="page-height" type="number" value="297" min="80" max="2000" step="1" disabled></label>
         </div>
+        <p class="print-note">For accurate sizing, export SVG and print at 100% / actual size. Large formats need a compatible printer or print shop; sheets are not split automatically.</p>
       </section>
     </aside>
 
@@ -1226,6 +1236,14 @@ footer strong { color: var(--ink); font-family: "Arial Black", sans-serif; }
   }
 
   // src/app.ts
+  var PAPER_DIMENSIONS = {
+    A5: [148, 210],
+    A4: [210, 297],
+    A3: [297, 420],
+    A2: [420, 594],
+    A1: [594, 841],
+    A0: [841, 1189]
+  };
   var byId = (id) => {
     const element = document.getElementById(id);
     if (!element) throw new Error(`Missing element #${id}`);
@@ -1555,8 +1573,7 @@ footer strong { color: var(--ink); font-family: "Arial Black", sans-serif; }
     elements.pageWidth.disabled = !custom;
     elements.pageHeight.disabled = !custom;
     if (!custom) {
-      const dimensions = preset === "A3" ? [297, 420] : [210, 297];
-      const [short = 210, long = 297] = dimensions;
+      const [short, long] = PAPER_DIMENSIONS[preset];
       settings.page.widthMm = orientation === "portrait" ? short : long;
       settings.page.heightMm = orientation === "portrait" ? long : short;
       elements.pageWidth.value = String(settings.page.widthMm);

@@ -2,6 +2,15 @@ import { clamp, processStencil, summarizeResult } from "./engine";
 import { canvasToBlob, createCombinedSvg, createLayerSvg, pagePointToSource, renderExportCanvas, renderPreview, renderSourceImage } from "./renderer";
 import type { CropTransform, InteractionTool, LayerCount, Orientation, PaperPreset, PreviewMode, StencilResult, StencilSettings } from "./types";
 
+const PAPER_DIMENSIONS: Record<Exclude<PaperPreset, "custom">, [number, number]> = {
+  A5: [148, 210],
+  A4: [210, 297],
+  A3: [297, 420],
+  A2: [420, 594],
+  A1: [594, 841],
+  A0: [841, 1189],
+};
+
 const byId = <T extends HTMLElement>(id: string): T => {
   const element = document.getElementById(id);
   if (!element) throw new Error(`Missing element #${id}`);
@@ -355,8 +364,7 @@ function applyPaperSize(): void {
   elements.pageWidth.disabled = !custom;
   elements.pageHeight.disabled = !custom;
   if (!custom) {
-    const dimensions = preset === "A3" ? [297, 420] : [210, 297];
-    const [short = 210, long = 297] = dimensions;
+    const [short, long] = PAPER_DIMENSIONS[preset];
     settings.page.widthMm = orientation === "portrait" ? short : long;
     settings.page.heightMm = orientation === "portrait" ? long : short;
     elements.pageWidth.value = String(settings.page.widthMm);
